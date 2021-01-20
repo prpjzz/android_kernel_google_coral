@@ -887,12 +887,7 @@ static void put_pi_state(struct futex_pi_state *pi_state)
 		unsigned long flags;
 
 		raw_spin_lock_irqsave(&pi_state->pi_mutex.wait_lock, flags);
-		owner = pi_state->owner;
-		if (owner) {
-			raw_spin_lock(&owner->pi_lock);
-			list_del_init(&pi_state->list);
-			raw_spin_unlock(&owner->pi_lock);
-		}
+		pi_state_update_owner(pi_state, NULL);
 		rt_mutex_proxy_unlock(&pi_state->pi_mutex);
 		raw_spin_unlock_irqrestore(&pi_state->pi_mutex.wait_lock, flags);
 	}
