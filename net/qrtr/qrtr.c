@@ -719,7 +719,23 @@ int qrtr_endpoint_post(struct qrtr_endpoint *ep, const void *data, size_t len)
 	if (len & 3)
 		return -EINVAL;
 
-	skb = alloc_skb_with_frags(sizeof(*v1), len, 0, &errcode, GFP_ATOMIC);
+	ver = le32_to_cpu(phdr->version);
+	size = le32_to_cpu(phdr->size);
+	type = le32_to_cpu(phdr->type);
+	dst = le32_to_cpu(phdr->dst_port_id);
+
+	psize = (size + 3) & ~3;
+
+	if (ver != QRTR_PROTO_VER)
+		return -EINVAL;
+
+	if (len != psize + QRTR_HDR_SIZE)
+		return -EINVAL;
+
+	if (dst != QRTR_PORT_CTRL && type != QRTR_TYPE_DATA)
+		return -EINVAL;
+
+	skb = __netdev_alloc_skb(NULL, len, GFP_ATOMIC | __GFP_NOWARN);
 	if (!skb)
 		return -ENOMEM;
 
